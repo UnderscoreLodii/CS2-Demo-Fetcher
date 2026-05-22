@@ -6,7 +6,7 @@ import java.net.URI;
 import java.util.HashMap;
 
 public class DemoRouter {
-    private final HashMap<String, DemoProvider> providers =new HashMap<>();
+    private final HashMap<String, DemoProvider> providers = new HashMap<>();
 
     public DemoRouter registerProvider(DemoProvider provider){
         providers.put(provider.getProviderSiteHost(), provider);

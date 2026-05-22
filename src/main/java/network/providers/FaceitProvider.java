@@ -1,5 +1,7 @@
 package network.providers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import java.io.IOException;
@@ -14,7 +16,7 @@ public class FaceitProvider implements DemoProvider {
 
     private static final Pattern correctPathPattern = Pattern.compile("^/(?:[a-zA-Z]{2}/)?cs2/room/(\\d+-[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})(?:/[a-zA-Z0-9_-]+)?/?$");
     private final HttpClient httpClient;
-
+    private final ObjectMapper objectMapper =  new ObjectMapper();
 
     public FaceitProvider(HttpClient httpClient) {
         this.httpClient = httpClient;
@@ -68,13 +70,28 @@ public class FaceitProvider implements DemoProvider {
             else if (response.statusCode() == 503 || response.statusCode() == 500) throw new RuntimeException("Faceit's servers are currently down or experiencing issues.");
             else throw new RuntimeException("Faceit API failed with unexpected HTTP status: " + response.statusCode());
 
-        } catch (IOException | InterruptedException e){
+        } catch (InterruptedException e){
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Network error: Could not connect to Faceit.", e);
+        } catch (IOException e){
             throw new RuntimeException("Network error: Could not connect to Faceit.", e);
         }
     }
 
     private String extractDemoUrlFromJson(String json) {
-        return "";
+        try {
+            String url = objectMapper.readTree(json)
+                    .path("demo_url")
+                    .path(0)
+                    .asText();
+
+            if (url.isBlank()) throw new IllegalArgumentException("Demo not available yet. The match might be live, cancelled, or still processing.");
+
+            return url;
+
+        }  catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to read Faceit JSON response.", e);
+        }
     }
 
     //temporary solution
