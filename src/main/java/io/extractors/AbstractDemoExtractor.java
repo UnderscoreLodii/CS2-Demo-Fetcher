@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Abstract base class for demo extraction using the Template Method pattern.
@@ -37,6 +39,20 @@ public abstract class AbstractDemoExtractor implements DemoExtractor {
         Files.createDirectories(targetDir);
 
         return targetDir;
+    }
+
+    /**
+     * Utility method for multi-file archives (like .zip).
+     * Scans a directory and returns a list of all .dem files inside it.
+     * Subclasses can call this at the end of their performExtraction method if needed.
+     */
+    protected List<Path> scanForDemos(Path workspaceDir) throws IOException{
+        try(Stream<Path> paths = Files.list(workspaceDir)){
+            return paths
+                    .filter(Files::isRegularFile)
+                    .filter(path ->  path.getFileName().toString().endsWith(".gz"))
+                    .collect(Collectors.toList());
+        }
     }
 
     /**
