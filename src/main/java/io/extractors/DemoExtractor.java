@@ -11,7 +11,7 @@ import java.util.List;
 public interface DemoExtractor {
 
     /**
-     * Decompresses a demo archive and writes the raw .dem file(s) to the target directory.
+     * Decompresses a demo archive into a dynamically created subfolder next to the source file.
      *
      * @param sourcePath  The path to the downloaded compressed file (e.g., .gz or .zip).
      * @return A List containing the paths to all successfully extracted .dem files.

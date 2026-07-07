@@ -6,15 +6,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class GzipExtractor implements DemoExtractor {
+public class GzipExtractor extends AbstractDemoExtractor {
 
     @Override
-    public List<Path> extractDemoFiles(Path sourcePath) throws IOException {
-        return List.of();
-    }
+    protected List<Path> performExtraction(Path source, Path targetDir) {
 
-    private Path getTargetPath(Path source){
-        String currentFileName = source.getFileName().toString();
-        return source.resolveSibling(currentFileName.substring(0, currentFileName.length()-3));
+        return List.of();
     }
 }

@@ -36,10 +36,10 @@ public class FaceitProvider implements DemoProvider {
     }
 
     /**
-     * Orchestrates the extraction of a match ID and retrieval of the corresponding demo URL.
-     *
-     * @param uri The standard Faceit matchroom URI.
-     * @return The direct .gz download link for the match demo.
+     * {@inheritDoc}
+     * <p>
+     * <b>Implementation Note:</b> For Faceit, this involves extracting the match ID
+     * via regex and querying the v4 API to return a .gz file link.
      */
     @Override
     public String getDownloadLink(URI uri) {
@@ -51,7 +51,7 @@ public class FaceitProvider implements DemoProvider {
         return extractDemoUrlFromJson(jsonResponse);
     }
 
-    /**
+    /*
      * Validates the provided URI and extracts the Faceit match ID using regex.
      */
     private String extractMatchId(URI uri) {
@@ -69,7 +69,7 @@ public class FaceitProvider implements DemoProvider {
         }
     }
 
-    /**
+    /*
      * Executes a GET request to the Faceit Match API and returns the JSON payload.
      * Handles specific HTTP status codes for authorization, rate limiting, and missing resources.
      */
@@ -99,7 +99,7 @@ public class FaceitProvider implements DemoProvider {
         }
     }
 
-    /**
+    /*
      * Parses the Faceit API JSON response to locate the demo URL array.
      */
     private String extractDemoUrlFromJson(String json) {
@@ -118,7 +118,7 @@ public class FaceitProvider implements DemoProvider {
         }
     }
 
-    /**
+    /*
      * Retrieves the authorization key needed for the Faceit API.
      * TODO: Replace Dotenv load with centralized configuration manager.
      */
