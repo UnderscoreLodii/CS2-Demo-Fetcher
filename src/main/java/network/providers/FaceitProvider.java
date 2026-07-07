@@ -12,12 +12,20 @@ import java.net.http.HttpResponse;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Implementation of DemoProvider for fetching Counter-Strike 2 match demos from the Faceit API.
+ */
 public class FaceitProvider implements DemoProvider {
 
     private static final Pattern correctPathPattern = Pattern.compile("^/(?:[a-zA-Z]{2}/)?cs2/room/(\\d+-[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})(?:/[a-zA-Z0-9_-]+)?/?$");
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper =  new ObjectMapper();
 
+    /**
+     * Constructs a FaceitProvider with an injected HttpClient instance.
+     *
+     * @param httpClient The shared HTTP client for executing network requests.
+     */
     public FaceitProvider(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
@@ -27,6 +35,12 @@ public class FaceitProvider implements DemoProvider {
         return "www.faceit.com";
     }
 
+    /**
+     * Orchestrates the extraction of a match ID and retrieval of the corresponding demo URL.
+     *
+     * @param uri The standard Faceit matchroom URI.
+     * @return The direct .gz download link for the match demo.
+     */
     @Override
     public String getDownloadLink(URI uri) {
 
@@ -37,6 +51,9 @@ public class FaceitProvider implements DemoProvider {
         return extractDemoUrlFromJson(jsonResponse);
     }
 
+    /**
+     * Validates the provided URI and extracts the Faceit match ID using regex.
+     */
     private String extractMatchId(URI uri) {
         String path = uri.getPath();
         if (path == null) {
@@ -52,6 +69,10 @@ public class FaceitProvider implements DemoProvider {
         }
     }
 
+    /**
+     * Executes a GET request to the Faceit Match API and returns the JSON payload.
+     * Handles specific HTTP status codes for authorization, rate limiting, and missing resources.
+     */
     private String fetchMatchData(String matchId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://open.faceit.com/data/v4/matches/" + matchId))
@@ -78,6 +99,9 @@ public class FaceitProvider implements DemoProvider {
         }
     }
 
+    /**
+     * Parses the Faceit API JSON response to locate the demo URL array.
+     */
     private String extractDemoUrlFromJson(String json) {
         try {
             String url = objectMapper.readTree(json)
@@ -94,7 +118,10 @@ public class FaceitProvider implements DemoProvider {
         }
     }
 
-    //temporary solution
+    /**
+     * Retrieves the authorization key needed for the Faceit API.
+     * TODO: Replace Dotenv load with centralized configuration manager.
+     */
     private String getApiKey(){
         return Dotenv.load().get("FACEIT_API_KEY");
     }
