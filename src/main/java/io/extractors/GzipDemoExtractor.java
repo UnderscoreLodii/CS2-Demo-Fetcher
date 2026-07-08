@@ -32,4 +32,9 @@ public class GzipDemoExtractor extends AbstractDemoExtractor {
 
         return List.of(targetPath);
     }
+
+    @Override
+    public String getSupportedFileExtension() {
+        return ".gz";
+    }
 }

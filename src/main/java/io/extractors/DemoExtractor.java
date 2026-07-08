@@ -19,4 +19,12 @@ public interface DemoExtractor {
      */
     List<Path> extractDemoFiles(Path sourcePath) throws IOException;
 
+    /**
+     * Retrieves the specific file extension that this extractor is designed to handle.
+     * This allows the application to dynamically route downloaded files to the correct unzipper.
+     *
+     * @return The supported file extension as a String (e.g., ".gz" or ".zip").
+     */
+    String getSupportedFileExtension();
+
 }

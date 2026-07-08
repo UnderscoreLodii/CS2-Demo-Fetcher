@@ -6,7 +6,7 @@ import java.net.URI;
  * Defines the contract for platform-specific demo fetchers.
  * Each provider is responsible for handling URLs from its designated host.
  */
-public interface DemoProvider {
+public interface DemoURLProvider {
 
     /**
      * Retrieves the hostname that this provider is responsible for resolving.

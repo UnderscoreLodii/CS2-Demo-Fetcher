@@ -13,20 +13,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Implementation of DemoProvider for fetching Counter-Strike 2 match demos from the Faceit API.
+ * Implementation of DemoURLProvider for fetching Counter-Strike 2 match demos from the Faceit API.
  */
-public class FaceitProvider implements DemoProvider {
+public class FaceitURLProvider implements DemoURLProvider {
 
     private static final Pattern correctPathPattern = Pattern.compile("^/(?:[a-zA-Z]{2}/)?cs2/room/(\\d+-[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})(?:/[a-zA-Z0-9_-]+)?/?$");
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper =  new ObjectMapper();
 
     /**
-     * Constructs a FaceitProvider with an injected HttpClient instance.
+     * Constructs a FaceitURLProvider with an injected HttpClient instance.
      *
      * @param httpClient The shared HTTP client for executing network requests.
      */
-    public FaceitProvider(HttpClient httpClient) {
+    public FaceitURLProvider(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
 

@@ -1,23 +1,23 @@
 package network;
 
-import network.providers.DemoProvider;
+import network.providers.DemoURLProvider;
 
 import java.net.URI;
 import java.util.HashMap;
 
 /**
- * Routes matchroom URLs to the appropriate platform-specific DemoProvider.
+ * Routes matchroom URLs to the appropriate platform-specific DemoURLProvider.
  */
-public class DemoRouter {
-    private final HashMap<String, DemoProvider> providers = new HashMap<>();
+public class DemoURLProviderRouter {
+    private final HashMap<String, DemoURLProvider> providers = new HashMap<>();
 
     /**
-     * Registers a new DemoProvider to handle its specific host.
+     * Registers a new DemoURLProvider to handle its specific host.
      *
      * @param provider The provider to register.
-     * @return The current DemoRouter instance to allow method chaining.
+     * @return The current DemoURLProviderRouter instance to allow method chaining.
      */
-    public DemoRouter registerProvider(DemoProvider provider){
+    public DemoURLProviderRouter registerProvider(DemoURLProvider provider){
         providers.put(provider.getProviderSiteHost(), provider);
         return this;
     }
@@ -31,7 +31,7 @@ public class DemoRouter {
      */
     public String getDownloadLink(String matchPageUrl) throws IllegalArgumentException {
         URI uri = URI.create(matchPageUrl);
-        DemoProvider provider = providers.get(uri.getHost());
+        DemoURLProvider provider = providers.get(uri.getHost());
         if (provider != null) {
             return provider.getDownloadLink(uri);
         }

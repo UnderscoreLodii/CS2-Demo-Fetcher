@@ -31,16 +31,4 @@ public class DemoFileManager {
 
         Files.move(source, target);
     }
-
-    /**
-     * Moves a demo file to a target directory using a default fallback name.
-     *
-     * @param source    The current path of the file to be moved.
-     * @param targetDir The directory where the file should be permanently saved.
-     * @throws IOException If a file system error occurs during the move operation.
-     */
-    public void manageFile(Path source, Path targetDir) throws IOException {
-        // TODO: Extract default name to a central configuration or user settings file
-        manageFile(source, targetDir, "FaceitDemo");
-    }
 }
