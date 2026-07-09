@@ -1,9 +1,10 @@
 package core;
 
-import core.naming.DemoRenamer;
+import core.models.MatchContext;
+import core.naming.DemoRenamerRouter;
 import io.DemoExtractorRouter;
 import io.DemoFileManager;
-import network.DemoURLProviderRouter;
+import network.MatchContextProviderRouter;
 import network.FileDownloader;
 
 import java.io.IOException;
@@ -12,29 +13,33 @@ import java.util.List;
 import java.util.Map;
 
 public class MatchProcessor {
-    private final DemoURLProviderRouter demoURLProviderRouter;
+    private final WorkspaceManager workspaceManager;
+    private final MatchContextProviderRouter matchContextProviderRouter;
     private final FileDownloader  fileDownloader;
     private final DemoExtractorRouter demoExtractorRouter;
-    private final DemoRenamer demoRenamer;
+    private final DemoRenamerRouter demoRenamerRouter;
     private final DemoFileManager  demoFileManager;
 
-    public MatchProcessor(DemoURLProviderRouter demoURLProviderRouter, FileDownloader fileDownloader, DemoExtractorRouter demoExtractorRouter, DemoRenamer demoRenamer, DemoFileManager demoFileManager){
-        this.demoURLProviderRouter = demoURLProviderRouter;
+    public MatchProcessor(WorkspaceManager workspaceManager, MatchContextProviderRouter matchContextProviderRouter, FileDownloader fileDownloader, DemoExtractorRouter demoExtractorRouter, DemoRenamerRouter demoRenamerRouter, DemoFileManager demoFileManager){
+        this.workspaceManager = workspaceManager;
+        this.matchContextProviderRouter = matchContextProviderRouter;
         this.fileDownloader = fileDownloader;
         this.demoExtractorRouter = demoExtractorRouter;
-        this.demoRenamer = demoRenamer;
+        this.demoRenamerRouter = demoRenamerRouter;
         this.demoFileManager = demoFileManager;
     }
 
     public void processMatch(String matchpageUrl, Path tempDirPath, Path csDemoDirPath, String customName) throws IllegalArgumentException, IOException {
 
-        String downloadUrl = demoURLProviderRouter.getDownloadLink(matchpageUrl);
+        Path workspace = workspaceManager.createWorkspace();
 
-        Path downloadedFilePath = fileDownloader.downloadFile(tempDirPath, downloadUrl);
+        MatchContext matchContext = matchContextProviderRouter.getMatchContext(matchpageUrl);
 
-        List<Path> demoFilePaths = demoExtractorRouter.extractDemoFiles(downloadedFilePath);
+        List<Path> downloadedFilePaths = fileDownloader.downloadFiles(workspace, matchContext.demo_urls());
 
-        Map<Path, String> nameMap = demoRenamer.generateNameMap(demoFilePaths, matchpageUrl, customName);
+        List<Path> demoFilePaths = demoExtractorRouter.extractAll(downloadedFilePaths);
+
+        Map<Path, String> nameMap = demoRenamerRouter.generateNameMap(demoFilePaths, matchContext, customName);
 
         for(Map.Entry<Path, String> entry : nameMap.entrySet()){
             Path path = entry.getKey();
@@ -42,5 +47,7 @@ public class MatchProcessor {
 
             demoFileManager.manageFile(path, csDemoDirPath, finalName);
         }
+
+        workspaceManager.cleanupWorkspace();
     }
 }

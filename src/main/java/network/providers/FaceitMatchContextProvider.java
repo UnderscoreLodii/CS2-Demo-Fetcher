@@ -2,6 +2,7 @@ package network.providers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import core.models.MatchContext;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import java.io.IOException;
@@ -13,20 +14,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Implementation of DemoURLProvider for fetching Counter-Strike 2 match demos from the Faceit API.
+ * Implementation of MatchContextProvider for fetching Counter-Strike 2 match demos from the Faceit API.
  */
-public class FaceitURLProvider implements DemoURLProvider {
+public class FaceitMatchContextProvider implements MatchContextProvider {
 
     private static final Pattern correctPathPattern = Pattern.compile("^/(?:[a-zA-Z]{2}/)?cs2/room/(\\d+-[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})(?:/[a-zA-Z0-9_-]+)?/?$");
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper =  new ObjectMapper();
 
     /**
-     * Constructs a FaceitURLProvider with an injected HttpClient instance.
+     * Constructs a FaceitMatchContextProvider with an injected HttpClient instance.
      *
      * @param httpClient The shared HTTP client for executing network requests.
      */
-    public FaceitURLProvider(HttpClient httpClient) {
+    public FaceitMatchContextProvider(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
@@ -42,13 +43,13 @@ public class FaceitURLProvider implements DemoURLProvider {
      * via regex and querying the v4 API to return a .gz file link.
      */
     @Override
-    public String getDownloadLink(URI uri) {
+    public MatchContext getMatchContext(URI uri) {
 
         String matchId = extractMatchId(uri);
 
         String jsonResponse = fetchMatchData(matchId);
 
-        return extractDemoUrlFromJson(jsonResponse);
+        return buildMatchContextFromJson(jsonResponse);
     }
 
     /*
@@ -102,7 +103,7 @@ public class FaceitURLProvider implements DemoURLProvider {
     /*
      * Parses the Faceit API JSON response to locate the demo URL array.
      */
-    private String extractDemoUrlFromJson(String json) {
+    private MatchContext buildMatchContextFromJson(String json) {
         try {
             String url = objectMapper.readTree(json)
                     .path("demo_url")

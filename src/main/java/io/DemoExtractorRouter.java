@@ -4,6 +4,7 @@ import io.extractors.DemoExtractor;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,32 +25,41 @@ public class DemoExtractorRouter {
      * @param extractor The specific DemoExtractor implementation to register.
      * @return This DemoExtractorRouter instance, for chaining.
      */
-    public DemoExtractorRouter registerExtractor(DemoExtractor extractor){
+    public DemoExtractorRouter registerExtractor(DemoExtractor extractor) {
         extractors.put(extractor.getSupportedFileExtension(), extractor);
         return this;
     }
 
     /**
-     * Identifies the file type of the downloaded archive and delegates the
-     * unzipping process to the corresponding registered extractor.
+     * Identifies the file type of the downloaded archives and delegates the
+     * unzipping process to the corresponding registered extractors.
      *
-     * @param sourcePath The path to the downloaded compressed file (e.g., .gz or .zip).
-     * @return A List containing the paths to all successfully extracted .dem files.
+     * @param sourcePaths A list of paths to the downloaded compressed files (e.g., .gz or .zip).
+     * @return An unmodifiable List containing the paths to all successfully extracted .dem files.
      * @throws IOException If a file system error occurs during the extraction process.
-     * @throws RuntimeException If no compatible extractor is found for the given file type.
+     * @throws RuntimeException If no compatible extractor is found for a given file type.
      */
-    public List<Path> extractDemoFiles(Path sourcePath) throws IOException {
-        DemoExtractor extractor = null;
-        String fileName = sourcePath.getFileName().toString();
-        for (String e : extractors.keySet()){
-            if(fileName.endsWith(e)){
-                extractor = extractors.get(e);
-                break;
+    public List<Path> extractAll(List<Path> sourcePaths) throws IOException {
+        List<Path> allExtractedDemos = new ArrayList<>();
+
+        for (Path sourcePath : sourcePaths) {
+            DemoExtractor extractor = null;
+            String fileName = sourcePath.getFileName().toString();
+
+            for (String e : extractors.keySet()) {
+                if (fileName.endsWith(e)) {
+                    extractor = extractors.get(e);
+                    break;
+                }
+            }
+
+            if (extractor != null) {
+                allExtractedDemos.addAll(extractor.extractDemoFiles(sourcePath));
+            } else {
+                throw new RuntimeException("File type not supported: " + sourcePath.getFileName());
             }
         }
-        if (extractor != null) {
-            return extractor.extractDemoFiles(sourcePath);
-        }
-        else throw new RuntimeException("File type not supported: " + sourcePath.getFileName());
+
+        return List.copyOf(allExtractedDemos);
     }
 }

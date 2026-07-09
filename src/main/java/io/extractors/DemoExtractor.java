@@ -11,10 +11,10 @@ import java.util.List;
 public interface DemoExtractor {
 
     /**
-     * Decompresses a demo archive into a dynamically created subfolder next to the source file.
+     * Decompresses a demo archive into its current directory (the match workspace).
      *
      * @param sourcePath  The path to the downloaded compressed file (e.g., .gz or .zip).
-     * @return A List containing the paths to all successfully extracted .dem files.
+     * @return An unmodifiable List containing the paths to all successfully extracted .dem files.
      * @throws IOException If a file system error occurs or the archive is corrupted.
      */
     List<Path> extractDemoFiles(Path sourcePath) throws IOException;
@@ -26,5 +26,4 @@ public interface DemoExtractor {
      * @return The supported file extension as a String (e.g., ".gz" or ".zip").
      */
     String getSupportedFileExtension();
-
 }

@@ -1,12 +1,14 @@
 package core;
 
-import core.naming.DemoRenamer;
+import core.naming.DemoRenamerRouter;
+import core.naming.renamers.DefaultDemoRenamer;
+import core.naming.renamers.FaceitDemoRenamer;
 import io.DemoExtractorRouter;
 import io.DemoFileManager;
 import io.extractors.GzipDemoExtractor;
-import network.DemoURLProviderRouter;
+import network.MatchContextProviderRouter;
 import network.FileDownloader;
-import network.providers.FaceitURLProvider;
+import network.providers.FaceitMatchContextProvider;
 
 import java.net.http.HttpClient;
 
@@ -15,15 +17,20 @@ public class Main {
         HttpClient httpClient = HttpClient.newHttpClient();
 
         FileDownloader fileDownloader = new FileDownloader(httpClient);
-        DemoURLProviderRouter demoURLProviderRouter = new DemoURLProviderRouter()
-                .registerProvider(new FaceitURLProvider(httpClient));
+        MatchContextProviderRouter matchContextProviderRouter = new MatchContextProviderRouter()
+                .registerProvider(new FaceitMatchContextProvider(httpClient));
 
         DemoFileManager demoFileManager = new DemoFileManager();
         DemoExtractorRouter demoExtractorRouter = new DemoExtractorRouter()
                 .registerExtractor(new GzipDemoExtractor());
 
-        DemoRenamer demoRenamer = new DemoRenamer();
+        DemoRenamerRouter demoRenamerRouter = new DemoRenamerRouter(new DefaultDemoRenamer())
+                .registerRenamer(new FaceitDemoRenamer());
 
-        MatchProcessor matchProcessor = new MatchProcessor(demoURLProviderRouter, fileDownloader, demoExtractorRouter, demoRenamer, demoFileManager);
+        WorkspaceManager workspaceManager = new WorkspaceManager();
+
+        MatchProcessor matchProcessor = new MatchProcessor(
+                workspaceManager, matchContextProviderRouter, fileDownloader, demoExtractorRouter, demoRenamerRouter, demoFileManager
+        );
     }
 }
