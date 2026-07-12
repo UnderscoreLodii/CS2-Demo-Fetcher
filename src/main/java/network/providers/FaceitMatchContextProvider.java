@@ -1,6 +1,7 @@
 package network.providers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.models.MatchContext;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -10,17 +11,20 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Implementation of MatchContextProvider for fetching Counter-Strike 2 match demos from the Faceit API.
+ * Implementation of {@link MatchContextProvider} for fetching Counter-Strike 2 match demos
+ * and metadata from the Faceit Data API v4.
  */
 public class FaceitMatchContextProvider implements MatchContextProvider {
 
     private static final Pattern correctPathPattern = Pattern.compile("^/(?:[a-zA-Z]{2}/)?cs2/room/(\\d+-[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})(?:/[a-zA-Z0-9_-]+)?/?$");
     private final HttpClient httpClient;
-    private final ObjectMapper objectMapper =  new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Constructs a FaceitMatchContextProvider with an injected HttpClient instance.
@@ -31,6 +35,9 @@ public class FaceitMatchContextProvider implements MatchContextProvider {
         this.httpClient = httpClient;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getProviderSiteHost() {
         return "www.faceit.com";
@@ -40,7 +47,8 @@ public class FaceitMatchContextProvider implements MatchContextProvider {
      * {@inheritDoc}
      * <p>
      * <b>Implementation Note:</b> For Faceit, this involves extracting the match ID
-     * via regex and querying the v4 API to return a .gz file link.
+     * via regex, querying the v4 API, and parsing the JSON response to return a {@link MatchContext}.
+     * </p>
      */
     @Override
     public MatchContext getMatchContext(URI uri) {
@@ -52,8 +60,11 @@ public class FaceitMatchContextProvider implements MatchContextProvider {
         return buildMatchContextFromJson(jsonResponse);
     }
 
-    /*
+    /**
      * Validates the provided URI and extracts the Faceit match ID using regex.
+     * @param uri The URI of the Faceit match room.
+     * @return The extracted Faceit match ID.
+     * @throws IllegalArgumentException if the URI path is null or does not match the expected Faceit format.
      */
     private String extractMatchId(URI uri) {
         String path = uri.getPath();
@@ -70,9 +81,14 @@ public class FaceitMatchContextProvider implements MatchContextProvider {
         }
     }
 
-    /*
+    /**
      * Executes a GET request to the Faceit Match API and returns the JSON payload.
      * Handles specific HTTP status codes for authorization, rate limiting, and missing resources.
+     * @param matchId The Faceit match ID to query.
+     * @return The raw JSON response body as a String.
+     * @throws IllegalStateException if the API key is invalid, lacks permissions, or is rate-limited.
+     * @throws IllegalArgumentException if the match is not found.
+     * @throws RuntimeException if a network error occurs or the server returns an unexpected status.
      */
     private String fetchMatchData(String matchId) {
         HttpRequest request = HttpRequest.newBuilder()
@@ -100,28 +116,43 @@ public class FaceitMatchContextProvider implements MatchContextProvider {
         }
     }
 
-    /*
-     * Parses the Faceit API JSON response to locate the demo URL array.
+    /**
+     * Parses the Faceit API JSON response to locate the demo URL array and team names.
+     * @param json The JSON response string from the Faceit API.
+     * @return A {@link MatchContext} containing the site host, extracted demo URLs, and team names.
+     * @throws IllegalArgumentException if the demo URLs are not yet available in the response (e.g., match is live).
+     * @throws RuntimeException if the JSON payload cannot be parsed.
      */
     private MatchContext buildMatchContextFromJson(String json) {
         try {
-            String url = objectMapper.readTree(json)
-                    .path("demo_url")
-                    .path(0)
-                    .asText();
 
-            if (url.isBlank()) throw new IllegalArgumentException("Demo not available yet. The match might be live, cancelled, or still processing.");
+            var tree = objectMapper.readTree(json);
+            var urls = tree.get("demo_url");
 
-            return url;
+            List<String> demo_urls = new ArrayList<>();
+            if(urls == null) throw new IllegalArgumentException("Demo not available yet. The match might be live, cancelled, or still processing.");
+            else{
+                for (JsonNode url : urls) {
+                    demo_urls.add(url.get("url").asText());
+                }
+            }
+
+            String teamA = tree.path("teams").path("property1").path("name").asText();
+            String teamB = tree.path("teams").path("property2").path("name").asText();
+
+            return new MatchContext(getProviderSiteHost(), demo_urls, teamA, teamB);
 
         }  catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to read Faceit JSON response.", e);
         }
     }
 
-    /*
+    /**
      * Retrieves the authorization key needed for the Faceit API.
+     * <p>
      * TODO: Replace Dotenv load with centralized configuration manager.
+     * </p>
+     * @return The Faceit API key string.
      */
     private String getApiKey(){
         return Dotenv.load().get("FACEIT_API_KEY");

@@ -1,5 +1,7 @@
 package core.naming.renamers;
 
+import core.models.MatchContext;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,7 +20,7 @@ public final class DefaultDemoRenamer extends AbstractDemoRenamer {
      * </p>
      */
     @Override
-    protected String generateDefaultName(String matchpageUrl) {
+    protected String generateDefaultName(MatchContext matchContext) {
         return "Demo_" + System.currentTimeMillis();
     }
 
@@ -29,7 +31,7 @@ public final class DefaultDemoRenamer extends AbstractDemoRenamer {
      * </p>
      */
     @Override
-    protected List<Path> sortDemoFiles(List<Path> rawFiles, String matchpageUrl) {
+    protected List<Path> sortDemoFiles(List<Path> rawFiles, MatchContext matchContext) {
         List<Path> sortedFiles = new ArrayList<>(rawFiles);
         sortedFiles.sort(Comparator.comparing(Path::getFileName));
 

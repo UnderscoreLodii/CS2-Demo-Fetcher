@@ -1,5 +1,7 @@
 package core.naming.renamers;
 
+import core.models.MatchContext;
+
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -26,25 +28,25 @@ public abstract class AbstractDemoRenamer implements DemoRenamer {
      * <p>
      * Note: This method is marked final to guarantee the integrity of the naming sequence
      * and enforce the read-only Map contract. Subclasses must customize behavior using
-     * the {@link #generateDefaultName(String)} and {@link #sortDemoFiles(List, String)} hooks.
+     * the {@link #generateDefaultName(MatchContext)} and {@link #sortDemoFiles(List, MatchContext)} hooks.
      * </p>
      *
      * @param demoFilePaths A list of paths pointing to the raw, unzipped temporary demo files.
-     * @param matchpageUrl  The original URL where the demo was downloaded from.
+     * @param matchContext  The context containing match metadata and platform details.
      * @param customName    An optional user-provided string to use as the base name (may be null or empty).
      * @return An unmodifiable Map mapping the file {@link Path} to its newly formatted name {@link String}.
      */
     @Override
-    public final Map<Path, String> generateNameMap(List<Path> demoFilePaths, String matchpageUrl, String customName) {
+    public final Map<Path, String> generateNameMap(List<Path> demoFilePaths, MatchContext matchContext, String customName) {
         Map<Path, String> nameMap = new HashMap<>();
 
         boolean useDefaultName = customName == null || customName.isBlank();
         boolean multipleFiles = demoFilePaths.size() > 1;
 
-        String finalName = useDefaultName ? generateDefaultName(matchpageUrl) : customName;
+        String finalName = useDefaultName ? generateDefaultName(matchContext) : customName;
 
         if(multipleFiles) {
-            List<Path> orderedDemoFilePaths = sortDemoFiles(demoFilePaths, matchpageUrl);
+            List<Path> orderedDemoFilePaths = sortDemoFiles(demoFilePaths, matchContext);
 
             for(int i = 0 ; i < orderedDemoFilePaths.size(); i++) {
                 Path currentDemoFilePath = orderedDemoFilePaths.get(i);
@@ -59,13 +61,13 @@ public abstract class AbstractDemoRenamer implements DemoRenamer {
     }
 
     /**
-     * Concrete subclasses must implement this to parse the given match page URL
-     * or metadata and generate a fallback name when the user leaves the custom name empty.
+     * Concrete subclasses must implement this to parse the given match metadata
+     * and generate a fallback name when the user leaves the custom name empty.
      *
-     * @param matchpageUrl The original match page link.
+     * @param matchContext The context containing match metadata and platform details.
      * @return A generated base name string (e.g., "Navi_vs_FaZe" or a timestamp fallback).
      */
-    protected abstract String generateDefaultName(String matchpageUrl);
+    protected abstract String generateDefaultName(MatchContext matchContext);
 
     /**
      * Concrete subclasses must implement this to order the raw unzipped demo files chronologically.
@@ -73,8 +75,8 @@ public abstract class AbstractDemoRenamer implements DemoRenamer {
      * is genuinely assigned the `_map1` suffix.
      *
      * @param rawFiles     The unordered batch of temporary files extracted from the archive.
-     * @param matchpageUrl The original match link, which may assist in calculating chronological sequence.
+     * @param matchContext The context containing match metadata, which may assist in calculating chronological sequence.
      * @return A newly sorted List of Paths arranged in actual match-play order.
      */
-    protected abstract List<Path> sortDemoFiles(List<Path> rawFiles, String matchpageUrl);
+    protected abstract List<Path> sortDemoFiles(List<Path> rawFiles, MatchContext matchContext);
 }

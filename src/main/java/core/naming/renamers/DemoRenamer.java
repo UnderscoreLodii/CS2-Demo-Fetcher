@@ -1,5 +1,7 @@
 package core.naming.renamers;
 
+import core.models.MatchContext;
+
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -17,12 +19,12 @@ public interface DemoRenamer {
      * their finalized, clean filenames.
      *
      * @param demoFilePaths A list of paths pointing to the raw, unzipped temporary demo files.
-     * @param matchpageUrl  The original URL where the demo was downloaded from (used for metadata/fallback naming).
+     * @param matchContext  The context containing match metadata and platform details.
      * @param customName    An optional user-provided string to use as the base name (may be null or empty).
      * @return An unmodifiable Map linking each original temporary file Path to its new, formatted filename String.
      * @throws UnsupportedOperationException if any attempt is made to mutate the returned map down the pipeline.
      */
-    Map<Path, String> generateNameMap(List<Path> demoFilePaths, String matchpageUrl, String customName);
+    Map<Path, String> generateNameMap(List<Path> demoFilePaths, MatchContext matchContext, String customName);
 
     /**
      * Retrieves the specific web domain that this renaming strategy is designed to handle.

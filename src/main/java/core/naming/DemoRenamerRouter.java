@@ -1,8 +1,8 @@
 package core.naming;
 
+import core.models.MatchContext;
 import core.naming.renamers.DemoRenamer;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -40,20 +40,19 @@ public class DemoRenamerRouter {
     }
 
     /**
-     * Identifies the platform domain from the provided URL and delegates the
+     * Identifies the platform domain from the provided context and delegates the
      * file renaming logic to the corresponding registered strategy, or the fallback if unknown.
      *
      * @param demoFilePaths The list of raw, unzipped temporary demo files.
-     * @param matchpageUrl The original URL where the demo was downloaded from.
-     * @param customName An optional user-provided name (can be null or blank).
+     * @param matchContext  The context containing match metadata and platform details.
+     * @param customName    An optional user-provided name (can be null or blank).
      * @return A Map linking each original temporary file Path to its new, formatted filename String.
      */
-    public Map<Path, String> generateNameMap(List<Path> demoFilePaths, String matchpageUrl, String customName) {
-        URI uri = URI.create(matchpageUrl);
-        String siteHost = uri.getHost();
+    public Map<Path, String> generateNameMap(List<Path> demoFilePaths, MatchContext matchContext, String customName) {
+        String siteHost = matchContext.siteHost();
 
         DemoRenamer renamer = renamers.getOrDefault(siteHost,  fallbackRenamer);
 
-        return renamer.generateNameMap(demoFilePaths, matchpageUrl, customName);
+        return renamer.generateNameMap(demoFilePaths, matchContext, customName);
     }
 }
